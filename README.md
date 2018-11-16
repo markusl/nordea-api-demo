@@ -1,20 +1,27 @@
 # Nordea Open Banking API example
 
-See more details at https://developer.nordeaopenbanking.com/
+See more details at <https://developer.nordeaopenbanking.com>
 
-API definition: https://developer.nordeaopenbanking.com/sites/sandbox-obi-dev.developer.eu.apiconnect.ibmcloud.com/files/api-docs/ais/v2/files/swagger.json
+AIS API definition: <https://raw.githubusercontent.com/NordeaOB/swaggers/master/ais-v2.json>
+I&A API definition: <https://raw.githubusercontent.com/NordeaOB/swaggers/master/ia-v2.json>
 
 ## Usage
-1. Install node 9.2.0
-```bash
-nvm install 9.2.0
-```
+
+1. Install node 11.2.0
+
+  ```bash
+  nvm install 11.2.0
+  ```
+
 2. Set environment variables
-```bash
-export CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-export CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
+
+  ```bash
+  export CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  export CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  ```
+
 3. Run
+
 ```bash
 node --experimental-modules index.mjs
 ```

@@ -1,16 +1,18 @@
 {
   "name": "nordea-api-demo",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Example usage of Nordea Open Banking interfaces",
-  "main": "index.js",
+  "main": "index.mjs",
   "engines": {
-    "node": ">= 6.10.0"
+    "node": ">= 11.2.0"
   },
   "author": "Markus Lindqvist",
   "license": "MIT",
   "dependencies": {
+    "@types/node-fetch": "^2.1.3",
     "fast-url-parser": "^1.1.3",
-    "node-fetch": "^1.7.3",
+    "node-fetch": "^2.3.0",
+    "query-string": "^6.2.0",
     "querystringparser": "^0.1.1",
     "urlencode": "^1.1.0"
   }

@@ -1,36 +1,44 @@
 
 import fetch from 'node-fetch';
 import Url from 'fast-url-parser';
+import queryString from 'query-string';
 import QueryStringParser from 'querystringparser';
 import urlencode from 'urlencode';
 Url.queryString = QueryStringParser;
 
-const getToken = (clientId, clientSecret) => {
-    const authUrlTemplate = 'https://api.nordeaopenbanking.com/v1/authentication?client_id=CLIENT_ID&redirect_uri=https://httpbin.org/post&X-Response-Scenarios=AuthenticationSkipUI&state=';
-    const accessTokenTemplate = 'https://api.nordeaopenbanking.com/v1/authentication/access_token';
+const getToken = async (clientId, clientSecret) => {
+    const authParams = {
+        state: 'oauth2',
+        client_id: clientId,
+        scope: 'ACCOUNTS_BASIC,ACCOUNTS_BALANCES,ACCOUNTS_DETAILS,ACCOUNTS_TRANSACTIONS,PAYMENTS_MULTIPLE',
+        duration: 1234,
+        language: 'en',
+        accounts: 'FI4710113500010326',
+        max_tx_history: 120,
+        redirect_uri: 'https://httpbin.org/get',
+    };
+    const authUrl = `https://api.nordeaopenbanking.com/v2/authorize?` + queryString.stringify(authParams);
+    const accessTokenTemplate = 'https://api.nordeaopenbanking.com/v2/authorize/access_token';
     
-    const authUrl = authUrlTemplate.replace('CLIENT_ID', clientId);
-
-    return fetch(authUrl)
-        .then(response => {
-            const parsed = new Url.parse(response.url, true);
-            return parsed.query.code;
-        })
-        .then(code => fetch(accessTokenTemplate, {
-                method: 'POST',
-                body: 'code=' + urlencode(code) + '&redirect_uri=https://httpbin.org/post',
-                headers: {
-                    'Content-Type' :'application/x-www-form-urlencoded',
-                    'X-IBM-Client-Id' : clientId,
-                    'X-IBM-Client-Secret' : clientSecret,
-                }
-            }))
-        .then(response => response.json())
-        .then(response => ({
-            accessToken: response.access_token,
-            clientId: clientId,
-            clientSecret: clientSecret,
-        }));
+    const response = await fetch(authUrl);
+    console.log(response.url);
+    const parsed = new Url.parse(response.url, true);
+    const code = parsed.query.code;
+    const accessTokenResponse = await fetch(accessTokenTemplate, {
+        method: 'POST',
+        body: 'code=' + urlencode(code) + '&redirect_uri=https://httpbin.org/get',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-IBM-Client-Id': clientId,
+            'X-IBM-Client-Secret': clientSecret,
+        }
+    });
+    const token = await accessTokenResponse.json();
+    return ({
+        accessToken: token.access_token,
+        clientId: clientId,
+        clientSecret: clientSecret,
+    });
 }
 
 const getGetHeaders = (token) => ({
@@ -42,41 +50,33 @@ const getGetHeaders = (token) => ({
     }
 })
 
-const getAccounts = (token) => {
+const getAccounts = async (token) => {
     const accountsUrl = 'https://api.nordeaopenbanking.com/v2/accounts';
 
-    return fetch(accountsUrl, getGetHeaders(token))
-        .then(response => response.json())
-        .then(response => ({
-            token: token,
-            response: response.response,
-        }));
+    const accountsResponse = await fetch(accountsUrl, getGetHeaders(token));
+    const accounts = await accountsResponse.json();
+    return accounts.response;
 }
 
-const getTransactions = (token, accountId) => {
-    const transactionsUrlTemplate = 'https://api.nordeaopenbanking.com/v2/accounts/{ACCOUNT-ID}/transactions';
-    
-    return fetch(
-            transactionsUrlTemplate.replace('{ACCOUNT-ID}', accountId),
-             getGetHeaders(token))
-        .then(response => {
-            return response.json();
-        });
+const getTransactions = async (token, accountId) => {
+    const transactionsUrl = `https://api.nordeaopenbanking.com/v2/accounts/${accountId}/transactions`;
+    const response = await fetch(transactionsUrl, getGetHeaders(token));
+    return response.json();
 }
 
-const nordeaApiDemo = (clientId, clientSecret) => {
-    getToken(clientId, clientSecret)
-        .then(token => getAccounts(token))
-        .then(response => {
-            console.log(response.response.accounts);
-            //return Promise.all(response.response.accounts.map(a => getTransactions(response.token, a._id)));
-            // For some reason, it currently fails if you try to fetch accounts[1]
-            return getTransactions(response.token, response.response.accounts[0]._id);
-        })
-        .then(transactions => console.log(transactions.response))
-        .catch(e => console.log(e));
+const nordeaApiDemo = async (clientId, clientSecret) => {
+    const token = await getToken(clientId, clientSecret);
+    const accounts = await getAccounts(token);
+    console.log(accounts.accounts);
+    const transactions = await Promise.all(
+        accounts.accounts.map(a => getTransactions(token, a._id)));
+    return transactions;
 }
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-nordeaApiDemo(CLIENT_ID, CLIENT_SECRET);
+
+if (CLIENT_ID === undefined || CLIENT_SECRET === undefined) {
+    throw Error('Parameters missing');
+}
+nordeaApiDemo(CLIENT_ID, CLIENT_SECRET).then((tx) => console.log(tx));
