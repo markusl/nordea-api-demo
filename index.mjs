@@ -21,6 +21,7 @@ const getToken = async (clientId, clientSecret) => {
     const accessTokenTemplate = 'https://api.nordeaopenbanking.com/v2/authorize/access_token';
     
     const response = await fetch(authUrl);
+    console.log('Authurl fetched');
     const parsed = new Url.parse(response.url, true);
     const code = parsed.query.code;
     const accessTokenResponse = await fetch(accessTokenTemplate, {
@@ -32,6 +33,7 @@ const getToken = async (clientId, clientSecret) => {
             'X-IBM-Client-Secret': clientSecret,
         }
     });
+    console.log('Tokens fetched');
     const token = await accessTokenResponse.json();
     return ({
         accessToken: token.access_token,
@@ -50,7 +52,7 @@ const getGetHeaders = (token) => ({
 })
 
 const getAccounts = async (token) => {
-    const accountsUrl = 'https://api.nordeaopenbanking.com/v2/accounts';
+    const accountsUrl = 'https://api.nordeaopenbanking.com/v3/accounts';
 
     const accountsResponse = await fetch(accountsUrl, getGetHeaders(token));
     const accounts = await accountsResponse.json();
@@ -58,7 +60,7 @@ const getAccounts = async (token) => {
 }
 
 const getTransactions = async (token, accountId) => {
-    const transactionsUrl = `https://api.nordeaopenbanking.com/v2/accounts/${accountId}/transactions`;
+    const transactionsUrl = `https://api.nordeaopenbanking.com/v3/accounts/${accountId}/transactions`;
     const response = await fetch(transactionsUrl, getGetHeaders(token));
     return response.json();
 }
@@ -68,7 +70,7 @@ const nordeaApiDemo = async (clientId, clientSecret) => {
     const accounts = await getAccounts(token);
     console.log(accounts.accounts);
     const transactions = await Promise.all(
-        accounts.accounts.map(a => getTransactions(token, a._id)));
+        accounts.accounts.map(a => getTransactions(token, a.id)));
     return transactions;
 }
 
