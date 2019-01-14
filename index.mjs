@@ -13,14 +13,16 @@ const getToken = async (clientId, clientSecret) => {
         scope: 'ACCOUNTS_BASIC,ACCOUNTS_BALANCES,ACCOUNTS_DETAILS,ACCOUNTS_TRANSACTIONS,PAYMENTS_MULTIPLE',
         duration: 1234,
         language: 'en',
-        accounts: 'FI4710113500010326',
+        country: 'FI',
         max_tx_history: 12,
         redirect_uri: 'https://httpbin.org/get',
     };
-    const authUrl = `https://api.nordeaopenbanking.com/v2/authorize?` + queryString.stringify(authParams);
-    const accessTokenTemplate = 'https://api.nordeaopenbanking.com/v2/authorize/access_token';
+    const authUrl = `https://api.nordeaopenbanking.com/v3/authorize?` + queryString.stringify(authParams);
+    const accessTokenTemplate = 'https://api.nordeaopenbanking.com/v3/authorize/token';
     
-    const response = await fetch(authUrl);
+    const response = await fetch(authUrl, {
+        method: 'GET',
+    });
     console.log('Authurl fetched');
     const parsed = new Url.parse(response.url, true);
     const code = parsed.query.code;
